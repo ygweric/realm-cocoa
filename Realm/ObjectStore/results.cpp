@@ -71,7 +71,15 @@ size_t Results::size()
     switch (m_mode) {
         case Mode::Empty: return 0;
         case Mode::Table: return m_table->size();
-        case Mode::Query: return m_query.count();
+        case Mode::Query:
+            try {
+                return m_query.count();
+            }
+            catch (DeletedLinkView const& ex) {
+                m_mode = Mode::Empty;
+                m_table_view = TableView();
+                return 0;
+            }
         case Mode::TableView:
             update_tableview();
             return m_table_view.size();
@@ -139,11 +147,17 @@ void Results::update_tableview()
         case Mode::Table:
             return;
         case Mode::Query:
-            m_table_view = m_query.find_all();
-            if (m_sort) {
-                m_table_view.sort(m_sort.columnIndices, m_sort.ascending);
+            try {
+                m_table_view = m_query.find_all();
+                if (m_sort) {
+                    m_table_view.sort(m_sort.columnIndices, m_sort.ascending);
+                }
+                m_mode = Mode::TableView;
             }
-            m_mode = Mode::TableView;
+            catch (DeletedLinkView const& ex) {
+                m_mode = Mode::Empty;
+                m_table_view = TableView();
+            }
             break;
         case Mode::TableView:
             try {

@@ -54,7 +54,6 @@ class RealmTests: TestCase {
         }
         try! realm.write {
             realm.delete(p3) // no longer causes EXC_BAD_ACCESS
-            _ = grandchildren.first // materializing the results works around the issue below
             realm.delete(p2) // no longer causes 'Assertion failed: is_attached()'
             realm.delete(p1) // this will succeed.
         }
