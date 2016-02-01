@@ -110,6 +110,7 @@ public:
     bool insert_empty_rows(size_t, size_t, size_t, bool) { return true; }
     bool erase_rows(size_t, size_t, size_t, bool) { return true; }
     bool swap_rows(size_t, size_t) { return true; }
+    bool change_link_targets(size_t, size_t) { return true; }
     bool clear_table() noexcept { return true; }
     bool link_list_set(size_t, size_t) { return true; }
     bool link_list_insert(size_t, size_t) { return true; }

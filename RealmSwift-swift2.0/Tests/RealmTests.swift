@@ -24,7 +24,42 @@ import XCTest
 #endif
 import Foundation
 
+class Person: Object {
+    dynamic var name = ""
+    let children = List<Person>()
+}
+
 class RealmTests: TestCase {
+    func test3054() {
+        let realm = try! Realm()
+        let p1 = Person(); p1.name = "Tim"
+        let p2 = Person(); p2.name = "Tom"; p2.children.append(p1)
+        let p3 = Person(); p3.name = "Max"; p3.children.append(p2)
+        // Max -> Tom -> Tim
+        try! realm.write {
+            realm.add([p1, p2, p3])
+        }
+
+        let max = realm.objects(Person).filter("name = 'Max'").first!
+        let children = max.children.filter("name = name")
+        let grandchildren = children.first!.children.filter("name = name")
+
+        let token = realm.addNotificationBlock { notification, realm in
+            print("---")
+            print(max)
+            print("---")
+            print(children)
+            print("---")
+            print(grandchildren)
+        }
+        try! realm.write {
+            realm.delete(p3) // no longer causes EXC_BAD_ACCESS
+            realm.delete(p2) // no longer causes 'Assertion failed: is_attached()'
+            realm.delete(p1) // this will succeed.
+        }
+        realm.removeNotification(token)
+    }
+
     func testPath() {
         XCTAssertEqual(try! Realm(path: testRealmPath()).path, testRealmPath())
     }
