@@ -42,6 +42,7 @@ Realm::Config::Config(const Config& c)
 , encryption_key(c.encryption_key)
 , schema_version(c.schema_version)
 , migration_function(c.migration_function)
+, delete_realm_if_migration_needed(c.delete_realm_if_migration_needed)
 {
     if (c.schema) {
         schema = std::make_unique<Schema>(*c.schema);
