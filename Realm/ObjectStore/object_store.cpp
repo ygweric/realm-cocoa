@@ -178,6 +178,9 @@ std::vector<ObjectSchemaValidationException> ObjectStore::verify_object_schema(O
 
     // check to see if properties are the same
     for (auto& current_prop : table_schema.properties) {
+        if (current_prop.is_marked_as_deleting()) {
+            continue;
+        }
         auto target_prop = target_schema.property_for_name(current_prop.name);
 
         if (!target_prop) {
@@ -200,6 +203,9 @@ std::vector<ObjectSchemaValidationException> ObjectStore::verify_object_schema(O
 
     // check for new missing properties
     for (auto& target_prop : target_schema.properties) {
+        if (target_prop.is_marked_as_deleting()) {
+            continue;
+        }
         if (!table_schema.property_for_name(target_prop.name)) {
             exceptions.emplace_back(ExtraPropertyException(table_schema.name, target_prop));
         }
@@ -293,8 +299,12 @@ void ObjectStore::create_tables(Group *group, Schema &target_schema, bool update
             current_prop.table_column -= deleted;
 
             auto target_prop = target_object_schema->property_for_name(current_prop.name);
-            if (!target_prop || (property_has_changed(current_prop, *target_prop)
-                                 && !property_can_be_migrated_to_nullable(current_prop, *target_prop))) {
+            // mark column for deletion
+            if (!target_prop) {
+                current_prop.mark_as_deleting(*table);
+            }
+            else if ((property_has_changed(current_prop, *target_prop) &&
+                      !property_can_be_migrated_to_nullable(current_prop, *target_prop))) {
                 if (deleted == current_schema.properties.size() - 1) {
                     // We're about to remove the last column from the table. Insert a placeholder column to preserve
                     // the number of rows in the table for the addition of new columns below.
@@ -358,6 +368,22 @@ void ObjectStore::create_tables(Group *group, Schema &target_schema, bool update
     }
 }
 
+void ObjectStore::remove_columns(Group *group, Schema &target_schema) {
+    for (auto& target_object_schema : target_schema) {
+        TableRef table = table_for_object_type(group, target_object_schema.name);
+        ObjectSchema current_schema(group, target_object_schema.name);
+        size_t deleted = 0;
+        for (auto& current_prop : current_schema.properties) {
+            current_prop.table_column -= deleted;
+            if (current_prop.is_marked_as_deleting()) {
+                table->remove_column(current_prop.table_column);
+                ++deleted;
+                current_prop.table_column = npos;
+            }
+        }
+    }
+}
+
 bool ObjectStore::is_schema_at_version(const Group *group, uint64_t version) {
     uint64_t old_version = get_schema_version(group);
     if (old_version > version && old_version != NotVersioned) {
@@ -403,6 +429,7 @@ void ObjectStore::update_realm_with_schema(Group *group, Schema const& old_schem
     create_tables(group, schema, migrating);
 
     if (!migrating) {
+        remove_columns(group, schema);
         // If we aren't migrating, then verify that all of the tables which
         // were already present are valid (newly created ones always are)
         verify_schema(old_schema, schema, true);
@@ -417,7 +444,7 @@ void ObjectStore::update_realm_with_schema(Group *group, Schema const& old_schem
     // apply the migration block if provided and there's any old data
     if (get_schema_version(group) != ObjectStore::NotVersioned) {
         migration(group, schema);
-
+        remove_columns(group, schema);
         validate_primary_column_uniqueness(group, schema);
     }
 
@@ -485,6 +512,18 @@ void ObjectStore::delete_data_for_object(Group *group, StringData object_type) {
         group->remove_table(table->get_index_in_group());
         set_primary_key_for_object(group, object_type, "");
     }
+}
+
+void ObjectStore::rename_column(Group *group, Schema& passed_schema, StringData object_type, StringData old_name, StringData new_name) {
+    Schema schema = schema_from_group(group);
+    auto matching_schema = schema.find(object_type);
+    Property property = *matching_schema->property_for_name(Property::name_if_deleted(old_name));
+    TableRef table = table_for_object_type(group, object_type);
+    size_t column_to_remove = matching_schema->property_for_name(new_name)->table_column;
+    table->rename_column(property.table_column, new_name);
+    table->remove_column(column_to_remove);
+    property.name = new_name;
+    verify_schema(schema_from_group(group), passed_schema);
 }
 
 bool ObjectStore::is_empty(const Group *group) {

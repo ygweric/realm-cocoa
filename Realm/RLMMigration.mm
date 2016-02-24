@@ -114,7 +114,7 @@ using namespace realm;
     }
 }
 
--(RLMObject *)createObject:(NSString *)className withValue:(id)value {
+- (RLMObject *)createObject:(NSString *)className withValue:(id)value {
     return [_realm createObject:className withValue:value];
 }
 
@@ -144,6 +144,10 @@ using namespace realm;
     }
 
     return true;
+}
+
+- (void)renameClassName:(NSString *)className property:(NSString *)propertyName newProperty:(NSString *)newProperty {
+    realm::ObjectStore::rename_column(_realm.group, *_realm->_realm->config().schema, className.UTF8String, propertyName.UTF8String, newProperty.UTF8String);
 }
 
 @end

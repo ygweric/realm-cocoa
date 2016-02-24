@@ -19,27 +19,15 @@
 #import "AppDelegate.h"
 #import <Realm/Realm.h>
 
-// Define your models
-@interface Dog : RLMObject
-@property NSString *name;
-@property NSInteger age;
-@property (readonly) NSArray *owners; // Realm doesn't persist this property because it is readonly
-@end
-
-@implementation Dog
-// Define "owners" as the inverse relationship to Person.dogs
-- (NSArray *)owners {
-    return [self linkingObjectsOfClass:@"Person" forProperty:@"dogs"];
-}
-@end
-
-RLM_ARRAY_TYPE(Dog)
+#define VERSION 1
 
 @interface Person : RLMObject
-@property NSString      *name;
-@property RLMArray<Dog> *dogs;
+#if VERSION == 0
+@property NSString *name;
+#elif VERSION == 1
+@property NSString *fullName;
+#endif
 @end
-
 @implementation Person
 @end
 
@@ -50,21 +38,26 @@ RLM_ARRAY_TYPE(Dog)
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.rootViewController = [[UIViewController alloc] init];
     [self.window makeKeyAndVisible];
+    NSLog(@"%@", [RLMRealmConfiguration defaultConfiguration].path);
 
+#if VERSION == 0
     [[NSFileManager defaultManager] removeItemAtPath:[RLMRealmConfiguration defaultConfiguration].path error:nil];
 
     RLMRealm *realm = [RLMRealm defaultRealm];
     [realm transactionWithBlock:^{
-        [Person createInRealm:realm withValue:@[@"John", @[@[@"Fido", @1]]]];
-        [Person createInRealm:realm withValue:@[@"Mary", @[@[@"Rex", @2]]]];
+        [Person createInRealm:realm withValue:@[@"John"]];
     }];
+#elif VERSION == 1
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    config.schemaVersion = 1;
 
-    // Log all dogs and their owners using the "owners" inverse relationship
-    RLMResults *allDogs = [Dog allObjects];
-    for (Dog *dog in allDogs) {
-        NSArray *ownerNames = [dog.owners valueForKeyPath:@"name"];
-        NSLog(@"%@ has %lu owners (%@)", dog.name, (unsigned long)ownerNames.count, ownerNames);
-    }
+    config.migrationBlock = ^(RLMMigration *migration, uint64_t oldSchemaVersion){
+        [migration renameClassName:@"Person" property:@"name" newProperty:@"fullName"];
+    };
+    [RLMRealmConfiguration setDefaultConfiguration:config];
+#endif
+
+    NSLog(@"%@", [Person allObjects]);
     return YES;
 }
 

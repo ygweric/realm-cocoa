@@ -69,6 +69,8 @@ namespace realm {
         // deletes the table for the given type
         static void delete_data_for_object(Group *group, StringData object_type);
 
+        static void rename_column(Group *group, Schema& passed_schema, StringData object_type, StringData old_name, StringData new_name);
+
         // indicates if this group contains any objects
         static bool is_empty(const Group *group);
 
@@ -90,6 +92,9 @@ namespace realm {
         // set references to tables on targetSchema and create/update any missing or out-of-date tables
         // if update existing is true, updates existing tables, otherwise only adds and initializes new tables
         static void create_tables(realm::Group *group, Schema &target_schema, bool update_existing);
+
+        // remove columns marked for deletion
+        static void remove_columns(Group *group, Schema &target_schema);
 
         // verify a target schema against an expected schema, setting the table_column property on each schema object
         // updates the column mapping on the target_schema
