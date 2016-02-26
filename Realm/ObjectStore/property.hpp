@@ -20,12 +20,8 @@
 #define REALM_PROPERTY_HPP
 
 #include <string>
-#include <realm/table.hpp>
 
 namespace realm {
-    // FIXME: this might make long column names exceed the maximum allowed length.
-    const std::string column_deletion_marker = "REALM_COLUMN_DELETION_MARKER";
-
     enum PropertyType {
         /** Integer type: NSInteger, int, long, Int (Swift) */
         PropertyTypeInt    = 0,
@@ -60,12 +56,6 @@ namespace realm {
 
         size_t table_column = -1;
         bool requires_index() const { return is_primary || is_indexed; }
-
-        void mark_as_deleting(Table& table) { table.rename_column(table_column, column_deletion_marker + name); }
-        bool is_marked_as_deleting() const { return name.compare(0, column_deletion_marker.length(), column_deletion_marker) == 0; }
-        static std::string name_if_deleted(std::string name) {
-            return column_deletion_marker + name;
-        }
     };
 
     static inline const char *string_for_property_type(PropertyType type) {
