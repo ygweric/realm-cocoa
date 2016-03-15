@@ -152,7 +152,7 @@ static inline bool property_can_be_migrated_to_nullable(const Property& old_prop
         && new_property.name == old_property.name;
 }
 
-void ObjectStore::verify_schema(Schema const& actual_schema, Schema& target_schema, bool allow_missing_tables) {
+std::vector<ObjectSchemaValidationException> ObjectStore::verify_schema(Schema const& actual_schema, Schema& target_schema, bool allow_missing_tables) {
     std::vector<ObjectSchemaValidationException> errors;
     for (auto &object_schema : target_schema) {
         auto matching_schema = actual_schema.find(object_schema);
@@ -167,9 +167,7 @@ void ObjectStore::verify_schema(Schema const& actual_schema, Schema& target_sche
         auto more_errors = verify_object_schema(*matching_schema, object_schema);
         errors.insert(errors.end(), more_errors.begin(), more_errors.end());
     }
-    if (errors.size()) {
-        throw SchemaMismatchException(errors);
-    }
+    return errors;
 }
 
 std::vector<ObjectSchemaValidationException> ObjectStore::verify_object_schema(ObjectSchema const& table_schema,

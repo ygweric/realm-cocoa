@@ -45,7 +45,7 @@ namespace realm {
         // verify that schema from a group and a target schema are compatible
         // updates the column mapping on all ObjectSchema properties of the target schema
         // throws if the schema is invalid or does not match
-        static void verify_schema(Schema const& actual_schema, Schema& target_schema, bool allow_missing_tables = false);
+        static std::vector<ObjectSchemaValidationException> verify_schema(Schema const& actual_schema, Schema& target_schema, bool allow_missing_tables = false);
 
         // determines if a realm with the given old schema needs non-migration
         // changes to make it compatible with the given target schema

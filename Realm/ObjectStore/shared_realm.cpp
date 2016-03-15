@@ -195,7 +195,19 @@ void Realm::update_schema(std::unique_ptr<Schema> schema, uint64_t version)
             return true;
         }
 
-        ObjectStore::verify_schema(*m_config.schema, *schema, m_config.read_only);
+        auto errors = ObjectStore::verify_schema(*m_config.schema, *schema, m_config.read_only);
+        if (errors.size()) {
+            if (m_config.delete_realm_if_migration_needed) {
+                begin_transaction();
+                for (auto &object_schema : *m_config.schema) {
+                    ObjectStore::delete_data_for_object(m_group, object_schema.name);
+                }
+                commit_transaction();
+            } else {
+                throw SchemaMismatchException(errors);
+            }
+        }
+
         m_config.schema = std::move(schema);
         m_config.schema_version = version;
         m_coordinator->update_schema(*m_config.schema);
