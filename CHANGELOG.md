@@ -5,6 +5,8 @@ x.x.x Release notes (yyyy-MM-dd)
 
 * Deprecate `-[RLMRealm removeNotification:]` in favor of
   `-[RLMNotificationToken stop]`.
+* Deprecate properties of type `id`/`AnyObject`. This type was rarely used,
+  rarely useful and unsupported in every other Realm binding.
 
 ### Enhancements
 
