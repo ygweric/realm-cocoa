@@ -29,7 +29,7 @@ extern "C" {
 //
 
 // create or get cached accessors for the given schema
-void RLMRealmCreateAccessors(RLMSchema *schema);
+void RLMRealmCreateAccessors(RLMSchema *schema, bool readOnly);
 
 // Clear the cache of created accessor classes
 void RLMClearAccessorCache();

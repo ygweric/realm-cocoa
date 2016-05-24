@@ -78,7 +78,8 @@ No changes since 0.103.2.
 
 ### Enhancements
 
-* None.
+* Improve startup performance with large numbers of `RLMObject`/`Object`
+  subclasses.
 
 ### Bugfixes
 

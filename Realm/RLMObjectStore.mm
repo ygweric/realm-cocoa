@@ -43,32 +43,41 @@ using namespace realm;
 // Schema used to created generated accessors
 static NSMutableArray * const s_accessorSchema = [NSMutableArray new];
 
-void RLMRealmCreateAccessors(RLMSchema *schema) {
-    // create accessors for non-dynamic realms
-    RLMSchema *matchingSchema = nil;
-    for (RLMSchema *accessorSchema in s_accessorSchema) {
-        if ([schema isEqualToSchema:accessorSchema]) {
-            matchingSchema = accessorSchema;
-            break;
-        }
-    }
-
-    if (matchingSchema) {
-        // reuse accessors
-        for (RLMObjectSchema *objectSchema in schema.objectSchema) {
-            objectSchema.accessorClass = matchingSchema[objectSchema.className].accessorClass;
-        }
-    }
-    else {
-        // create accessors and cache in s_accessorSchema
-        for (RLMObjectSchema *objectSchema in schema.objectSchema) {
-            if (objectSchema.table) {
-                NSString *prefix = [NSString stringWithFormat:@"RLMAccessor_v%lu_",
-                                    (unsigned long)s_accessorSchema.count];
-                objectSchema.accessorClass = RLMAccessorClassForObjectClass(objectSchema.objectClass, objectSchema, prefix);
+void RLMRealmCreateAccessors(RLMSchema *schema, bool readOnly) {
+    @synchronized (s_accessorSchema) {
+        // reuse the existing accessor classes if this schema has already been opened
+        for (RLMSchema *accessorSchema in s_accessorSchema) {
+            if (![schema isEqualToSchema:accessorSchema]) {
+                continue;
             }
+            for (RLMObjectSchema *objectSchema in schema.objectSchema) {
+                objectSchema.accessorClass = accessorSchema[objectSchema.className].accessorClass;
+            }
+            return;
+        }
+
+        // Otherwise we need to create new accessor classes
+        static unsigned long s_accessorCount = 0;
+        const size_t bufferSize = sizeof("RLMAccessor_v_") // includes null terminator
+                                + std::numeric_limits<unsigned long>::digits10
+                                + realm::Group::max_table_name_length;
+        char className[bufferSize] = "RLMAccessor_v";
+        sprintf(className + strlen(className), "%lu_", (unsigned long)s_accessorCount);
+        auto prefixLen = strlen(className);
+
+        for (RLMObjectSchema *objectSchema in schema.objectSchema) {
+            // Read-only Realms can be missing tables entirely and we don't need
+            // to create acccessor classes for those
+            if (readOnly && !objectSchema.table) {
+                continue;
+            }
+
+            strcpy(className + prefixLen, objectSchema.className.UTF8String);
+            objectSchema.accessorClass = RLMManagedAccessorClassForObjectClass(objectSchema.objectClass, objectSchema, className);
+            objectSchema.table = nullptr;
         }
         [s_accessorSchema addObject:schema];
+        ++s_accessorCount;
     }
 }
 

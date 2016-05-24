@@ -388,7 +388,7 @@ REALM_NOINLINE void RLMRealmTranslateException(NSError **error) {
             }
 
             if (!dynamic || configuration.customSchema) {
-                RLMRealmCreateAccessors(realm.schema);
+                RLMRealmCreateAccessors(realm.schema, realm->_realm->config().read_only);
             }
         }
 
