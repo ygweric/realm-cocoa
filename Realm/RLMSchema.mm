@@ -82,12 +82,15 @@ static RLMObjectSchema *RLMRegisterClass(Class cls) {
 static void RLMRegisterClassLocalNames(Class *classes, NSUInteger count) {
     for (NSUInteger i = 0; i < count; i++) {
         Class cls = classes[i];
-
-        if (!RLMIsObjectSubclass(cls) || RLMIsGeneratedClass(cls)) {
+        if (!RLMIsObjectSubclass(cls)) {
             continue;
         }
 
         NSString *className = NSStringFromClass(cls);
+        if ([className hasPrefix:@"RLMGenerated "]) {
+            continue;
+        }
+
         if ([RLMSwiftSupport isSwiftClassName:className]) {
             className = [RLMSwiftSupport demangleClassName:className];
         }
