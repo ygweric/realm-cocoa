@@ -29,7 +29,7 @@ private func realmWithSingleClassProperties(_ fileURL: NSURL, className: String,
     let objectSchema = RLMObjectSchema(className: className, objectClass: MigrationObject.self, properties: properties)
     schema.objectSchema = [objectSchema]
     let config = RLMRealmConfiguration()
-    config.fileURL = fileURL
+    config.fileURL = fileURL as URL
     config.dynamic = true
     config.customSchema = schema
     return try! RLMRealm(configuration: config)
@@ -37,7 +37,7 @@ private func realmWithSingleClassProperties(_ fileURL: NSURL, className: String,
 
 private func dynamicRealm(_ fileURL: NSURL) -> RLMRealm {
     let config = RLMRealmConfiguration()
-    config.fileURL = fileURL
+    config.fileURL = fileURL as URL
     config.dynamic = true
     return try! RLMRealm(configuration: config)
 }
@@ -371,7 +371,7 @@ class MigrationTests: TestCase {
                 XCTAssertEqual((oldObj!["doubleCol"] as! Double), 12.3 as Double)
                 XCTAssertEqual((newObj!["doubleCol"] as! Double), 12.3 as Double)
 
-                let binaryCol = "a".data(using: NSUTF8StringEncoding)!
+                let binaryCol = "a".data(using: String.Encoding.utf8)!
                 XCTAssertEqual((oldObj!["binaryCol"] as! NSData), binaryCol)
                 XCTAssertEqual((newObj!["binaryCol"] as! NSData), binaryCol)
 

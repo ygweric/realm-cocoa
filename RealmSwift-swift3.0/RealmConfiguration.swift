@@ -155,13 +155,13 @@ extension Realm {
         internal var rlmConfiguration: RLMRealmConfiguration {
             let configuration = RLMRealmConfiguration()
             if fileURL != nil {
-                configuration.fileURL = self.fileURL
+                configuration.fileURL = self.fileURL as URL?
             } else if inMemoryIdentifier != nil {
                 configuration.inMemoryIdentifier = self.inMemoryIdentifier
             } else {
                 fatalError("A Realm Configuration must specify a path or an in-memory identifier.")
             }
-            configuration.encryptionKey = self.encryptionKey
+            configuration.encryptionKey = self.encryptionKey as Data?
             configuration.readOnly = self.readOnly
             configuration.schemaVersion = self.schemaVersion
             configuration.migrationBlock = self.migrationBlock.map { accessorMigrationBlock($0) }
