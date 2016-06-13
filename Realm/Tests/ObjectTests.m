@@ -1074,18 +1074,22 @@ static void testDatesInRange(NSTimeInterval from, NSTimeInterval to, void (^chec
     [realm cancelWriteTransaction];
 }
 
+static void addProperty(Class cls, const char *name, const char *type, size_t size, size_t align, id getter) {
+    objc_property_attribute_t objectColAttrs[] = {
+        {"T", type},
+    };
+    class_addIvar(cls, name, size, align, type);
+    class_addProperty(cls, name, objectColAttrs, sizeof(objectColAttrs) / sizeof(objc_property_attribute_t));
+
+    char encoding[4] = " @:";
+    encoding[0] = *type;
+    class_addMethod(cls, sel_registerName(name), imp_implementationWithBlock(getter), encoding);
+}
+
 - (void)testObjectSubclassAddedAtRuntime {
     Class objectClass = objc_allocateClassPair(RLMObject.class, "RuntimeGeneratedObject", 0);
-    objc_property_attribute_t objectColAttrs[] = {
-        { "T", "@\"RuntimeGeneratedObject\"" },
-    };
-    class_addIvar(objectClass, "objectCol", sizeof(id), alignof(id), "@\"RuntimeGeneratedObject\"");
-    class_addProperty(objectClass, "objectCol", objectColAttrs, sizeof(objectColAttrs) / sizeof(objc_property_attribute_t));
-    objc_property_attribute_t intColAttrs[] = {
-        { "T", "i" },
-    };
-    class_addIvar(objectClass, "intCol", sizeof(int), alignof(int), "i");
-    class_addProperty(objectClass, "intCol", intColAttrs, sizeof(intColAttrs) / sizeof(objc_property_attribute_t));
+    addProperty(objectClass, "objectCol", "@\"RuntimeGeneratedObject\"", sizeof(id), alignof(id), ^(__unused id obj) { return nil; });
+    addProperty(objectClass, "intCol", "i", sizeof(int), alignof(int), ^int(__unused id obj) { return 0; });
     objc_registerClassPair(objectClass);
     XCTAssertEqualObjects([objectClass className], @"RuntimeGeneratedObject");
 

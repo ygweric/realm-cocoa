@@ -58,7 +58,7 @@ void RLMRealmCreateAccessors(RLMSchema *schema, bool readOnly) {
 
         // Otherwise we need to create new accessor classes
         static unsigned long s_accessorCount = 0;
-        const size_t bufferSize = sizeof("RLMGenerated Managed v ") // includes null terminator
+        const size_t bufferSize = sizeof("RLMGenerated Managed v ") // includes space for null terminator
                                 + std::numeric_limits<unsigned long>::digits10
                                 + realm::Group::max_table_name_length;
         char className[bufferSize] = "RLMGenerated Managed v";
