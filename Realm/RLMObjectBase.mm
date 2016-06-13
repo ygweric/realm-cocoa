@@ -311,7 +311,7 @@ static id RLMValidatedObjectForProperty(id obj, RLMProperty *prop, RLMSchema *sc
     const char *className = class_getName(self);
     const char accessorClassPrefix[] = "RLMGenerated Managed";
     if (!strncmp(className, accessorClassPrefix, sizeof(accessorClassPrefix) - 1)) {
-        if (self.sharedSchema[key]) {
+        if ([class_getSuperclass(self.class) sharedSchema][key]) {
             return NO;
         }
     }
