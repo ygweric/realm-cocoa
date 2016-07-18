@@ -398,7 +398,9 @@ public final class Realm {
     :nodoc:
     */
     public func allDynamicObjects(ofType typeName: String) -> Results<DynamicObject> {
-        return Results<DynamicObject>(RLMGetObjects(rlmRealm, typeName, nil))
+        let results = Results<DynamicObject>(RLMGetObjects(rlmRealm, typeName, nil))
+        results.rlmResults.objectSchema.accessorClass = DynamicObject.self
+        return results
     }
 
     /**
@@ -1062,7 +1064,9 @@ public final class Realm {
      :nodoc:
     */
     public func dynamicObjects(className: String) -> Results<DynamicObject> {
-        return Results<DynamicObject>(RLMGetObjects(rlmRealm, className, nil))
+        let results = Results<DynamicObject>(RLMGetObjects(rlmRealm, className, nil))
+        results.rlmResults.objectSchema.accessorClass = DynamicObject.self
+        return results
     }
 
     /**
