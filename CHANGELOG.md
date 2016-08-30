@@ -24,6 +24,7 @@ x.x.x Release notes (yyyy-MM-dd)
   deallocated on a different thread than it was created on.
 * Fix a crash when the last reference to an observed object is released from
   within the observation.
+* Enforce uniqueness for `RealmOptional` primary keys when using the `value` setter.
 
 1.0.2 Release notes (2016-07-13)
 =============================================================
