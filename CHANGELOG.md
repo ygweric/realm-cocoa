@@ -24,6 +24,8 @@ x.x.x Release notes (yyyy-MM-dd)
   deallocated on a different thread than it was created on.
 * Fix a crash when the last reference to an observed object is released from
   within the observation.
+* Fix incorrect behavior where subscripting an unmanaged object can also set properties
+  that are not managed, inconsitent with subscripting a managed object.
 
 1.0.2 Release notes (2016-07-13)
 =============================================================
