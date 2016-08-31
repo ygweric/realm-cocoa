@@ -449,7 +449,7 @@ public class Object: RLMObjectBase {
 
      - parameter value:  The value used to populate the object.
     */
-    public init(value: AnyObject) {
+    required public init(value: AnyObject) {
         self.dynamicType.sharedSchema() // ensure this class' objectSchema is loaded in the partialSharedSchema
         super.init(value: value, schema: RLMSchema.partialSharedSchema())
     }
