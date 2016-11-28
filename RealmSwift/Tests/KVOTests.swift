@@ -89,15 +89,8 @@ class KVOTests: TestCase {
         XCTAssert(changeDictionary != nil, "Did not get a notification", file: fileName, line: lineNumber)
         guard changeDictionary != nil else { return }
 
-        func forceCoerce(_ value: Any) -> T? {
-            // FIXME: Remove once Swift fixes `value as! T?` for `value: Any`.
-            func forceCast<T, U>(_ value: T, to type: U.Type) -> U { return value as! U }
-
-            if value is NSNull { return nil }
-            else { return forceCast(value, to: Optional<T>.self) }
-        }
-        let actualOld = forceCoerce(changeDictionary![NSKeyValueChangeKey.oldKey]!)
-        let actualNew = forceCoerce(changeDictionary![NSKeyValueChangeKey.newKey]!)
+        let actualOld = changeDictionary![NSKeyValueChangeKey.oldKey]! as? T
+        let actualNew = changeDictionary![NSKeyValueChangeKey.newKey]! as? T
 
         XCTAssert(old == actualOld, "Old value: expected \(old), got \(actualOld)",
                   file: fileName, line: lineNumber)
@@ -152,20 +145,20 @@ class KVOTests: TestCase {
             obj.arrayCol.append(obj)
         }
         observeListChange(obj, "arrayCol", .removal, NSIndexSet(index: 0)) {
-            obj.arrayCol.removeAllObjects()
+            obj.arrayCol.removeAll()
         }
 
         observeChange(obj, "optIntCol", nil, 10) { obj.optIntCol.value = 10 }
-        observeChange(obj, "optFloatCol", nil, 10) { obj.optFloatCol.value = 10 }
-        observeChange(obj, "optDoubleCol", nil, 10) { obj.optDoubleCol.value = 10 }
+        observeChange(obj, "optFloatCol", nil, 10 as Float) { obj.optFloatCol.value = 10 }
+        observeChange(obj, "optDoubleCol", nil, 10.0) { obj.optDoubleCol.value = 10 }
         observeChange(obj, "optBoolCol", nil, true) { obj.optBoolCol.value = true }
         observeChange(obj, "optStringCol", nil, "abc") { obj.optStringCol = "abc" }
         observeChange(obj, "optBinaryCol", nil, data) { obj.optBinaryCol = data }
         observeChange(obj, "optDateCol", nil, date) { obj.optDateCol = date }
 
         observeChange(obj, "optIntCol", 10, nil) { obj.optIntCol.value = nil }
-        observeChange(obj, "optFloatCol", 10, nil) { obj.optFloatCol.value = nil }
-        observeChange(obj, "optDoubleCol", 10, nil) { obj.optDoubleCol.value = nil }
+        observeChange(obj, "optFloatCol", 10 as Float, nil) { obj.optFloatCol.value = nil }
+        observeChange(obj, "optDoubleCol", 10.0, nil) { obj.optDoubleCol.value = nil }
         observeChange(obj, "optBoolCol", true, nil) { obj.optBoolCol.value = nil }
         observeChange(obj, "optStringCol", "abc", nil) { obj.optStringCol = nil }
         observeChange(obj, "optBinaryCol", data, nil) { obj.optBinaryCol = nil }
@@ -196,7 +189,7 @@ class KVOTests: TestCase {
             obj.arrayCol.append(obj)
         }
         observeListChange(obj, "arrayCol", .removal, NSIndexSet(index: 0)) {
-            obj.arrayCol.removeAllObjects()
+            obj.arrayCol.removeAll()
         }
 
         observeChange(obj, "optIntCol", nil, 10) { obj.optIntCol.value = 10 }
@@ -251,7 +244,7 @@ class KVOTests: TestCase {
             obj.arrayCol.append(obj)
         }
         observeListChange(obs, "arrayCol", .removal, NSIndexSet(index: 0)) {
-            obj.arrayCol.removeAllObjects()
+            obj.arrayCol.removeAll()
         }
 
         observeChange(obs, "optIntCol", nil, 10) { obj.optIntCol.value = 10 }

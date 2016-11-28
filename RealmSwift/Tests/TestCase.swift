@@ -123,6 +123,7 @@ class TestCase: XCTestCase {
 
     func assertThrows<T>(_ block: @autoclosure @escaping () -> T, reason regexString: String,
                          _ message: String? = nil, fileName: String = #file, lineNumber: UInt = #line) {
+        exceptionThrown = true
         RLMAssertThrowsWithReasonMatching(self, { _ = block() }, regexString, message, fileName, lineNumber)
     }
 
@@ -136,14 +137,29 @@ class TestCase: XCTestCase {
         }
     }
 
-    func assertFails<T>(_ expectedError: RealmSwift.Error.Code, _ message: String? = nil,
+    func assertFails<T>(_ expectedError: Realm.Error.Code, _ message: String? = nil,
                         fileName: StaticString = #file, lineNumber: UInt = #line,
                         block: () throws -> T) {
         do {
             _ = try block()
             XCTFail("Expected to catch <\(expectedError)>, but no error was thrown.",
                 file: fileName, line: lineNumber)
-        } catch let e as RealmSwift.Error where e.code == expectedError {
+        } catch let e as Realm.Error where e.code == expectedError {
+            // Success!
+        } catch {
+            XCTFail("Expected to catch <\(expectedError)>, but instead caught <\(error)>.",
+                file: fileName, line: lineNumber)
+        }
+    }
+
+    func assertFails<T>(_ expectedError: Error, _ message: String? = nil,
+                     fileName: StaticString = #file, lineNumber: UInt = #line,
+                     block: () throws -> T) {
+        do {
+            _ = try block()
+            XCTFail("Expected to catch <\(expectedError)>, but no error was thrown.",
+                file: fileName, line: lineNumber)
+        } catch let e where e._code == expectedError._code {
             // Success!
         } catch {
             XCTFail("Expected to catch <\(expectedError)>, but instead caught <\(error)>.",
@@ -271,6 +287,7 @@ class TestCase: XCTestCase {
 
     func assertThrows<T>(@autoclosure(escaping) block: () -> T, reason regexString: String,
                          _ message: String? = nil, fileName: String = #file, lineNumber: UInt = #line) {
+        exceptionThrown = true
         RLMAssertThrowsWithReasonMatching(self, { _ = block() } as dispatch_block_t, regexString, message, fileName, lineNumber)
     }
 

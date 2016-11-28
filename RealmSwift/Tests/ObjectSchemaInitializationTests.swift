@@ -191,7 +191,7 @@ class ObjectSchemaInitializationTests: TestCase {
         let types = Set(schema.properties.map { $0.type })
         XCTAssertEqual(types, Set([.string, .string, .data, .date, .object, .int, .float, .double, .bool]))
     }
-    
+
     func testImplicitlyUnwrappedOptionalsAreParsedAsOptionals() {
         let schema = SwiftImplicitlyUnwrappedOptionalObject().objectSchema
         XCTAssertTrue(schema["optObjectCol"]!.isOptional)
@@ -211,6 +211,7 @@ class SwiftFakeObject: NSObject {
     dynamic class func primaryKey() -> String? { return nil }
     dynamic class func ignoredProperties() -> [String] { return [] }
     dynamic class func indexedProperties() -> [String] { return [] }
+    dynamic class func _realmObjectName() -> String? { return nil }
 }
 
 class SwiftObjectWithNSURL: SwiftFakeObject {
@@ -487,6 +488,7 @@ class SwiftFakeObject: NSObject {
     dynamic class func primaryKey() -> String? { return nil }
     dynamic class func ignoredProperties() -> [String] { return [] }
     dynamic class func indexedProperties() -> [String] { return [] }
+    dynamic class func _realmObjectName() -> String? { return nil }
 }
 
 class SwiftObjectWithNSURL: SwiftFakeObject {
